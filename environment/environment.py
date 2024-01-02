@@ -44,6 +44,8 @@ class Env:
     def __init__(self, noUav, baseStationCoords=(0,0), ):
         self.noUav = noUav
         self.baseStationCoords = baseStationCoords
+        self.start = 0
+        # self.end = 
         
     def reset(self):
         self.done = False
