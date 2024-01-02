@@ -41,11 +41,11 @@ class Uav:
         return self.B * (np.log2(1 + self.calcSNIR()))
         
 class Env:
-    def __init__(self, noUav, baseStationCoords=(0,0), ):
+    def __init__(self, noUav, end, baseStationCoords=(0,0)):
         self.noUav = noUav
         self.baseStationCoords = baseStationCoords
         self.start = 0
-        # self.end = 
+        self.end = end
         
     def reset(self):
         self.done = False
