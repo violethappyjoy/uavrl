@@ -2,8 +2,10 @@ import numpy as np
 from environment.environment import Uav, Env
 from environment.dataset import Dataset
 
-# print((np.random.uniform(0, 100), np.random.uniform(0, 100))[1])
-# env = Env(1, baseStationCoords=(np.random.uniform(0, 100), np.random.uniform(0, 100)))
+env = Env(10)
+current = env.reset()
+print(current)
+print(np.array(current).reshape(-1, *current.shape))
 # print(env.cluster[0].calcThroughput())
 # # print(4e+7)
 
