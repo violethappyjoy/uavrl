@@ -17,7 +17,7 @@ while True:
         for _, uav in enumerate(env.cluster):
             snir = uav.calcSNIR()
             throughtput = uav.calcThroughput()
-            print([uav.tx, snir, throughtput])
+            print([env.uavId, uav.tx, snir, throughtput])
         break
 
 # print(env.cluster[0].calcThroughput())
