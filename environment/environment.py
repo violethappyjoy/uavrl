@@ -22,9 +22,9 @@ class Env:
         self.baseStationCoords = baseStationCoords
         self.start = 0
         self.end = end
-        self.state = []
-        self.memoryT = deque(maxlen = self.windowSize)
-        self.memoryP = deque(maxlen = self.windowSize)
+        self.state = deque(maxlen = self.noUav)
+        self.memoryT = deque([0] * self.windowSize, maxlen=self.windowSize)
+        self.memoryP = deque([0] * self.windowSize, maxlen=self.windowSize)
         
     def reset(self):
         self.done = False
@@ -50,7 +50,7 @@ class Env:
             throughtput = uav.calcThroughput()
             self.state.append([uav.tx, snir, throughtput])
             
-        print(self.state)
+        # print(self.state)
         
         return np.array(self.state)
     
@@ -59,11 +59,33 @@ class Env:
             return 0
         elif action == Actions.choose.value:
             stateArr = np.array(self.state)
+            # choose max SNIR
             self.uavId = np.argmax(stateArr[:, 1])
-            return self.uavId
+            # return self.uavId, self.cluster[self.uavId].calcSNIR(), self.cluster[self.uavId].calcThroughput()
+            # print(self.uavId)
+            throughput = self.cluster[self.uavId].calcThroughput()
+            # snir = self.cluster[self.uavId].calcSNIR()
+            if throughput >= self.memoryT[-1] and throughput >= max(self.memoryT):
+                return self.cluster[self.uavId].tx/4
+            elif throughput >= self.memoryT[-1] and throughput < max(self.memoryT):
+                return self.cluster[self.uavId].tx/6
+            else:
+                return -self.cluster[self.uavId].tx/6
+                
+            
     
     def step(self, action):
-        pass
+        self.memoryT.append(self.cluster[self.uavId].calcThroughput())
+        self.current+=1
+        
+        if self.current == self.end:
+            self.done = True
+            
+        self.reward = self.calcReward(action)
+        
+        step = self.getState()
+        
+        return step, self.reward, self.done
     
     def render(self):
         pass
