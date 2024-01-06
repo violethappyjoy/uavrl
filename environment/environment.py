@@ -18,13 +18,16 @@ class Env:
         
         self.shape = (windowSize, 1)
         self.actionSpace = OneD(len(Actions))
+        self.observationSize = self.noUav * 3
+        self.observationSpace = Box(low=np.full(self.observationSize, -np.inf), high=np.full(self.observationSize, np.inf), size=(self.observationSize, ))
+        
         
         self.baseStationCoords = baseStationCoords
         self.start = 0
         self.end = end
         self.state = deque(maxlen = self.noUav)
         self.memoryT = deque([0] * self.windowSize, maxlen=self.windowSize)
-        self.memoryP = deque([0] * self.windowSize, maxlen=self.windowSize)
+        # self.memoryP = deque([0] * self.windowSize, maxlen=self.windowSize)
         
     def reset(self):
         self.done = False
@@ -66,11 +69,11 @@ class Env:
             throughput = self.cluster[self.uavId].calcThroughput()
             # snir = self.cluster[self.uavId].calcSNIR()
             if throughput >= self.memoryT[-1] and throughput >= max(self.memoryT):
-                return self.cluster[self.uavId].tx/4
+                return self.cluster[self.uavId].tx/12
             elif throughput >= self.memoryT[-1] and throughput < max(self.memoryT):
-                return self.cluster[self.uavId].tx/6
+                return self.cluster[self.uavId].tx/24
             else:
-                return -self.cluster[self.uavId].tx/6
+                return -self.cluster[self.uavId].tx/12
                 
             
     
