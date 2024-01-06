@@ -4,7 +4,10 @@ from environment.dataset import Uav, Dataset
 import numpy as np
 import math
 from enum import Enum
+import os
 from collections import deque
+import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
         
 class Actions(Enum):
     ignore = 0
@@ -28,6 +31,9 @@ class Env:
         self.state = deque(maxlen = self.noUav)
         self.memoryT = deque([0] * self.windowSize, maxlen=self.windowSize)
         # self.memoryP = deque([0] * self.windowSize, maxlen=self.windowSize)
+        
+        self.throughput = []
+        self.totalReward = []
         
     def reset(self):
         self.done = False
@@ -77,7 +83,7 @@ class Env:
                 
             
     
-    def step(self, action):
+    def step(self, action): 
         self.memoryT.append(self.cluster[self.uavId].calcThroughput())
         self.current+=1
         
@@ -85,10 +91,44 @@ class Env:
             self.done = True
             
         self.reward = self.calcReward(action)
+        if self.current%self.windowSize or self.current==1:
+            self.totalReward.append(self.reward)
+            th = [item[2] for item in self.state]
+            self.throughput.append(th)
+            # print(self.throughput)
         
         step = self.getState()
         
         return step, self.reward, self.done
     
+    def plotThroughput(self):
+        uavThroughputs = list(map(list, zip(*self.throughput)))
+        timestep = range(len(self.throughput))
+        cmap = get_cmap('viridis')
+        
+        fig, ax = plt.subplots(figsize=(10, 5)) 
+        
+        for uavIdx, uavData in enumerate(uavThroughputs):
+            color = cmap(uavIdx / len(uavThroughputs))
+            ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
+            
+        ax.set_xlabel('Timestep')
+        ax.set_ylabel('Throughput')
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        plt.savefig('throughputGraphs/throughput.png')
+    
+    def plotRewards(self):
+        timestep = range(len(self.totalReward))
+        plt.plot(timestep, self.totalReward)
+        plt.xlabel('Timestep')
+        plt.ylabel('Throughput')
+        os.makedirs('rewardGraphs', exist_ok=True)
+
+    # Save the plot to the 'rewardGraphs/' directory
+        plt.savefig('rewardGraphs/reward.png')
+    
     def render(self):
-        pass
+        self.plotRewards()
+        self.plotThroughput()
+        
+        
