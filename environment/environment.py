@@ -48,8 +48,8 @@ class Env:
     def getState(self):
         self.cluster = [
             Uav(
-                v=np.random.uniform(150, 190),
-                tx=np.random.uniform(21, 27) + self.reward if self.uavId == id else np.random.uniform(21, 27),
+                v=np.random.uniform(80, 100),
+                tx=np.random.uniform(21, 27) + self.reward/2 if self.uavId == id else np.random.uniform(21, 27),
                 noise=174,
                 baseStationCoords=self.baseStationCoords
             ) for id in range(self.noUav)
@@ -91,7 +91,7 @@ class Env:
             self.done = True
             
         self.reward = self.calcReward(action)
-        if self.current%self.windowSize or self.current==1:
+        if self.current%(2*self.windowSize) or self.current==1:
             self.totalReward.append(self.reward)
             th = [item[2] for item in self.state]
             self.throughput.append(th)
@@ -101,21 +101,47 @@ class Env:
         
         return step, self.reward, self.done
     
+    # def plotThroughput(self):
+    #     uavThroughputs = list(map(list, zip(*self.throughput)))
+    #     timestep = range(len(self.throughput))
+    #     cmap = get_cmap('viridis')
+        
+    #     fig, ax = plt.subplots(figsize=(10, 5)) 
+        
+    #     for uavIdx, uavData in enumerate(uavThroughputs):
+    #         color = cmap(uavIdx / len(uavThroughputs))
+    #         ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
+            
+    #     ax.set_xlabel('Timestep')
+    #     ax.set_ylabel('Throughput')
+    #     ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    #     plt.savefig('throughputGraphs/throughput.png')
+    
     def plotThroughput(self):
         uavThroughputs = list(map(list, zip(*self.throughput)))
         timestep = range(len(self.throughput))
         cmap = get_cmap('viridis')
-        
-        fig, ax = plt.subplots(figsize=(10, 5)) 
-        
+
+        # Check if the directory exists, create if not
+        os.makedirs('throughputGraphs', exist_ok=True)
+
+        # Counter variable for plot index
+        plot_index = 1
+
         for uavIdx, uavData in enumerate(uavThroughputs):
             color = cmap(uavIdx / len(uavThroughputs))
+            fig, ax = plt.subplots(figsize=(10, 5))
+
             ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
+            ax.set_xlabel('Timestep')
+            ax.set_ylabel('Throughput')
+            ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
             
-        ax.set_xlabel('Timestep')
-        ax.set_ylabel('Throughput')
-        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-        plt.savefig('throughputGraphs/throughput.png')
+            # Save the plot to the 'throughputGraphs/' directory with a unique index
+            plt.savefig(f'throughputGraphs/throughput_{plot_index}.png')
+
+            # Increment the counter
+            plot_index += 1
     
     def plotRewards(self):
         timestep = range(len(self.totalReward))

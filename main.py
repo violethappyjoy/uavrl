@@ -2,7 +2,7 @@ import numpy as np
 from environment.environment import Uav, Env
 from environment.dataset import Dataset
 
-# env = Env(10, windowSize=2, end=10)
+# env = Env(10, windowSize=100, end=1000)
 env = Env(10)
 current = env.reset()
 # print(current)
@@ -12,11 +12,10 @@ print(env.observationSpace.shape)
 while True:
     action = env.actionSpace.sample()
     state, reward, done = env.step(action)
-    print(done, reward, env.uavId)
-    print(reward)
-    print(env.uavId)
+    # print(done, reward, env.uavId)
+    # print(reward)
+    # print(env.uavId)
     if done:
-        env.render()
         # print(state)
         # print(env.uavId)
         for _, uav in enumerate(env.cluster):
@@ -24,6 +23,7 @@ while True:
             throughtput = uav.calcThroughput()
             print([uav.tx, snir, throughtput])
         break
+env.render()
 
 # print(env.cluster[0].calcThroughput())
 # # print(4e+7)

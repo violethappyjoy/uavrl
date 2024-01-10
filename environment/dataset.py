@@ -3,12 +3,12 @@ import math
 
 class Uav:
     def __init__(self, v, tx, noise, baseStationCoords):
-        self.v = v # Velocity
-        self.tx = tx * self.v # Transmission Power
-        self.noise = noise # Extra Noise (eg. Thermal)
+        self.v = v # Velocity Kmph
+        self.tx = tx * self.v # Transmission Power dBm
+        self.noise = noise # Extra Noise dB
         self.intref = np.random.rand()*tx # Induce Noise
         self.base = baseStationCoords 
-        self.coords = (np.random.uniform(0, 100), np.random.uniform(0, 100))
+        self.coords = (np.random.uniform(0, 200), np.random.uniform(0, 200))
         self.d = self.calcDist()
         self.chGain = (1/self.d) * self.v # Channel Gain
         
@@ -33,9 +33,18 @@ class Uav:
         dinom = self.noise + self.intref
         return numerator/dinom
     
+    # def calcThroughput(self):
+    #     snir = self.calcSNIR()
+    #     return self.B * (np.log2(1 + snir))
+    
     def calcThroughput(self):
-        snir = self.calcSNIR()
-        return self.B * (np.log2(1 + snir))
+        try:
+            snir = self.calcSNIR()
+            return self.B * (np.log2(1 + snir))
+        except RuntimeWarning as warning:
+            print(f"Warning: {warning}")
+            print(f"Values causing the warning - snir: {snir}, B: {self.B}")
+            return np.nan
     
 class Dataset:
     def __init__(self, noUav, timestep):
@@ -47,7 +56,7 @@ class Dataset:
     def genDataset(self, idx, reward):
         for t in range(self.timestep):
             self.cluster = [Uav(
-            v=np.random.uniform(150, 190),
+            v=np.random.uniform(150, 190), #
             tx=np.random.uniform(21, 27) + reward if idx == id else np.random.uniform(21, 27),
             noise=174,
             baseStationCoords=self.baseStationCoords
