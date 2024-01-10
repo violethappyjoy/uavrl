@@ -32,8 +32,7 @@ class Env:
         self.memoryT = deque([0] * self.windowSize, maxlen=self.windowSize)
         # self.memoryP = deque([0] * self.windowSize, maxlen=self.windowSize)
         
-        self.throughput = []
-        self.totalReward = []
+        
         
     def reset(self):
         self.done = False
@@ -41,6 +40,8 @@ class Env:
         self.reward = 0
         self.uavId = 0
         
+        self.throughput = []
+        self.totalReward = []
         # self.snir = []
         # self.throughput = []
         return self.getState()
@@ -117,7 +118,7 @@ class Env:
     #     ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
     #     plt.savefig('throughputGraphs/throughput.png')
     
-    def plotThroughput(self):
+    def plotThroughput(self, episode):
         uavThroughputs = list(map(list, zip(*self.throughput)))
         timestep = range(len(self.throughput))
         cmap = get_cmap('viridis')
@@ -138,12 +139,13 @@ class Env:
             ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
             
             # Save the plot to the 'throughputGraphs/' directory with a unique index
-            plt.savefig(f'throughputGraphs/throughput_{plot_index}.png')
+            plt.savefig(f'throughputGraphs/throughput_{plot_index}_episode_{episode}.png')
 
             # Increment the counter
             plot_index += 1
+            plt.close()
     
-    def plotRewards(self):
+    def plotRewards(self, episode):
         timestep = range(len(self.totalReward))
         plt.plot(timestep, self.totalReward)
         plt.xlabel('Timestep')
@@ -151,10 +153,11 @@ class Env:
         os.makedirs('rewardGraphs', exist_ok=True)
 
     # Save the plot to the 'rewardGraphs/' directory
-        plt.savefig('rewardGraphs/reward.png')
+        plt.savefig(f'rewardGraphs/rewards_episode_{episode}.png')
+        plt.close()
     
-    def render(self):
-        self.plotRewards()
-        self.plotThroughput()
+    def render(self, episode):
+        self.plotRewards(episode)
+        self.plotThroughput(episode)
         
         
