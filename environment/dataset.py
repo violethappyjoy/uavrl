@@ -3,12 +3,13 @@ import math
 
 class Uav:
     def __init__(self, v, tx, noise, baseStationCoords):
-        self.v = v # Velocity Kmph
-        self.tx = tx * self.v # Transmission Power dBm
+        self.v = v * (5/18) # Velocity Kmph
+        # self.tx = tx * self.v # Transmission Power dBm
+        self.tx = self.calcTx(tx) # in watts
         self.noise = noise # Extra Noise dB
         self.intref = np.random.rand()*tx # Induce Noise
         self.base = baseStationCoords 
-        self.coords = (np.random.uniform(0, 200), np.random.uniform(0, 200))
+        self.coords = (np.random.uniform(22, 250), np.random.uniform(22, 250))
         self.d = self.calcDist()
         self.chGain = (1/self.d) * self.v # Channel Gain
         
@@ -22,7 +23,23 @@ class Uav:
             self.B = 5e+6 # 5 Mhz
         # self.d = self.calcDist()
         # self.sinr = self.chGain/(self.intref + self.noise)
-        
+    # def calcTx(self, dBm):
+    #     power = (dBm - 30)/10
+    #     tx = (10**power) * self.v
+    #     return tx
+    def calcTx(self, dBm):
+        try:
+            power = (dBm - 30)/10
+            tx = (10**power) * self.v
+            return tx
+        except OverflowError as e:
+            print(f"OverFlowError: {e}")
+            print(f"Value causing the overflow - power: {power}, dBm = {dBm}")
+            power = 18/10
+            tx = ((10**power)/1000) * self.v  # Convert dB to watts
+            return tx
+
+    
     def calcDist(self):
         x1, y1 = self.base
         x2, y2 = self.coords 
@@ -31,7 +48,7 @@ class Uav:
     def calcSNIR(self):
         numerator = self.tx * (self.chGain)**2
         dinom = self.noise + self.intref
-        return numerator/dinom
+        return numerator/dinom  
     
     # def calcThroughput(self):
     #     snir = self.calcSNIR()
@@ -50,14 +67,17 @@ class Dataset:
     def __init__(self, noUav, timestep):
             self.noUav = noUav
             self.timestep = timestep
-            self.baseStationCoords = (np.random.uniform(0, 100), np.random.uniform(0, 100))
+            self.baseStationCoords = (np.random.uniform(0, 272), np.random.uniform(0, 272))
             self.data = np.zeros((timestep,2*self.noUav))
             
     def genDataset(self, idx, reward):
+        transx = np.random.uniform(21, 27) + reward
+        if transx >= 27:
+            transx = 27
         for t in range(self.timestep):
             self.cluster = [Uav(
             v=np.random.uniform(150, 190), #
-            tx=np.random.uniform(21, 27) + reward if idx == id else np.random.uniform(21, 27),
+            tx= transx if idx == id else np.random.uniform(21, 27),
             noise=174,
             baseStationCoords=self.baseStationCoords
         ) for id in range(self.noUav)]
