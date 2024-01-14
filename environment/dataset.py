@@ -4,14 +4,15 @@ import math
 class Uav:
     def __init__(self, v, tx, noise, baseStationCoords):
         self.v = v * (5/18) # Velocity Kmph
-        # self.tx = tx * self.v # Transmission Power dBm
-        self.tx = self.calcTx(tx) # in watts
+        self.dBmtx = tx# Transmission Power dBm
+        self.tx = self.calcTx(self.dBmtx) # in watts
         self.noise = noise # Extra Noise dB
         self.intref = np.random.rand()*tx # Induce Noise
         self.base = baseStationCoords 
         self.coords = (np.random.uniform(22, 250), np.random.uniform(22, 250))
         self.d = self.calcDist()
         self.chGain = (1/self.d) * self.v # Channel Gain
+        # print(tx)
         
         if self.d <= 26.5:
             self.B = 4e+7 # 40Mhz
@@ -63,26 +64,26 @@ class Uav:
             print(f"Values causing the warning - snir: {snir}, B: {self.B}")
             return np.nan
     
-class Dataset:
-    def __init__(self, noUav, timestep):
-            self.noUav = noUav
-            self.timestep = timestep
-            self.baseStationCoords = (np.random.uniform(0, 272), np.random.uniform(0, 272))
-            self.data = np.zeros((timestep,2*self.noUav))
+# class Dataset:
+#     def __init__(self, noUav, timestep):
+#             self.noUav = noUav
+#             self.timestep = timestep
+#             self.baseStationCoords = (np.random.uniform(0, 272), np.random.uniform(0, 272))
+#             self.data = np.zeros((timestep,2*self.noUav))
             
-    def genDataset(self, idx, reward):
-        transx = np.random.uniform(21, 27) + reward
-        if transx >= 27:
-            transx = 27
-        for t in range(self.timestep):
-            self.cluster = [Uav(
-            v=np.random.uniform(150, 190), #
-            tx= transx if idx == id else np.random.uniform(21, 27),
-            noise=174,
-            baseStationCoords=self.baseStationCoords
-        ) for id in range(self.noUav)]
-            for i, uav in enumerate(self.cluster):
-                snir = uav.calcSNIR()
-                throughput = uav.calcThroughput()
-                self.data[t, 2 * i] = snir
-                self.data[t, 2 * i + 1] = throughput
+#     def genDataset(self, idx, reward):
+#         transx = np.random.uniform(21, 27) + reward
+#         if transx >= 27:
+#             transx = 27
+#         for t in range(self.timestep):
+#             self.cluster = [Uav(
+#             v=np.random.uniform(150, 190), #
+#             tx= transx if idx == id else np.random.uniform(21, 27),
+#             noise=174,
+#             baseStationCoords=self.baseStationCoords
+#         ) for id in range(self.noUav)]
+#             for i, uav in enumerate(self.cluster):
+#                 snir = uav.calcSNIR()
+#                 throughput = uav.calcThroughput()
+#                 self.data[t, 2 * i] = snir
+#                 self.data[t, 2 * i + 1] = throughput

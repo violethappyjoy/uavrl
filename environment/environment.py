@@ -183,7 +183,7 @@ class Env:
         
         self.shape = (windowSize, 1)
         self.actionSpace = OneD(self.noUav) 
-        self.observationSize = self.noUav * 3
+        self.observationSize = self.noUav * 4
         self.observationSpace = Box(low=np.full(self.observationSize, -np.inf), high=np.full(self.observationSize, np.inf), size=(self.observationSize, ))
         
         
@@ -205,6 +205,7 @@ class Env:
         self.current = self.start
         self.reward = 0
         self.uavId = 0
+        self.maxUavId = 0
         
         self.throughput = []
         self.totalReward = []
@@ -213,36 +214,88 @@ class Env:
         return self.getState()
 
     def getState(self):
-        self.cluster = [
-            Uav(
-                v=np.random.uniform(100, 190),
-                tx=np.random.uniform(21, 27) + self.reward if self.uavId == id else np.random.uniform(21, 27),
-                noise=174,
-                baseStationCoords=self.baseStationCoords
-            ) for id in range(self.noUav)
-        ]
+        self.cluster = []
+        for id in range(self.noUav):
+            if self.current == self.start:
+                velo = np.random.uniform(100,190)
+                txDbm = np.random.uniform(21, 27)
+                # print(txDbm)
+                # coords = (np.random.uniform(22, 250), np.random.uniform(22, 250))
+            elif self.uavId == id:
+                # print("NIGGA FOUND")
+                v = self.state[self.uavId][1]
+                if self.reward>0:
+                    velo = np.random.uniform(v, 190)
+                # elif v < 145 and self.reward>0:
+                #     velo = np.random.uniform(100, v)
+                else:
+                    velo = np.random.uniform(100,190)
+                txDbm = np.random.uniform(21, 27) + self.reward
+            else:
+                velo = np.random.uniform(100,190)
+                txDbm = np.random.uniform(21, 27) - self.reward/2
+                
+            # if txDbm >= 27:
+            #     txDbm = 27
+            if txDbm < 21:
+                txDbm = 21
+            obj = Uav(
+                v = velo,
+                tx = txDbm,
+                noise = 174,
+                baseStationCoords = self.baseStationCoords
+            )
+            self.cluster.append(obj)
+            
+        # self.cluster = [
+        #     Uav(
+        #         v=np.random.uniform(100, 190),
+        #         tx=np.random.uniform(21, 27) + self.reward if self.uavId == id else np.random.uniform(21, 27),
+        #         noise=174,
+        #         baseStationCoords=self.baseStationCoords
+        #     ) for id in range(self.noUav)
+        # ]
         for _, uav in enumerate(self.cluster):
             snir = uav.calcSNIR()
             throughtput = uav.calcThroughput()
-            self.state.append([uav.tx, snir, throughtput])
+            self.state.append([uav.dBmtx, uav.v, snir, throughtput])
             
         # print(self.state)
         
         return np.array(self.state)
     
     def calcReward(self, action):
+        stateArr = np.array(self.state)
+        self.maxUavId = np.argmax(stateArr[:, 2])
         self.uavId = action
-        throughput = self.cluster[action].calcThroughput()
-        if throughput >= self.memoryT[-1] and throughput >= max(self.memoryT):
-            return self.cluster[self.uavId].tx/6
-        elif throughput >= self.memoryT[-1] and throughput < max(self.memoryT):
-            return self.cluster[self.uavId].tx/12
+        throughputSelected = self.cluster[self.uavId].calcThroughput()
+        snirSelected = self.cluster[self.uavId].calcSNIR()
+        snirMax = self.cluster[self.maxUavId].calcSNIR()
+        if snirSelected>=snirMax and throughputSelected >= max(self.memoryT):
+            reward = self.cluster[self.uavId].dBmtx
+            return reward / 2
+        elif snirSelected>=snirMax and throughputSelected >= self.memoryT[-1]:
+            reward = self.cluster[self.uavId].dBmtx
+            return reward / 4
+        elif snirSelected<snirMax:
+            reward = self.cluster[self.maxUavId].dBmtx
+            return -(reward / 2)
         else:
-            return -self.cluster[self.uavId].tx/6 
+            reward = self.cluster[self.maxUavId].dBmtx
+            return -(reward / 4)
+        
+        
+        # throughput = self.cluster[action].calcThroughput()
+        # if throughput >= self.memoryT[-1] and throughput >= max(self.memoryT):
+        #     return self.cluster[self.uavId].tx/6
+        # elif throughput >= self.memoryT[-1] and throughput < max(self.memoryT):
+        #     return self.cluster[self.uavId].tx/12
+        # else:
+        #     return -self.cluster[self.uavId].tx/6 
     
     def step(self, action): 
-        self.memoryT.append(self.cluster[self.uavId].calcThroughput())
         self.current+=1
+        self.memoryT.append(self.cluster[self.uavId].calcThroughput())
         
         if self.current == self.end:
             self.done = True

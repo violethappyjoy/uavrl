@@ -13,7 +13,11 @@ from agent.agent import Agent
 
 # env = Env(noUav=5, windowSize=10, end=100)
 env = Env(5)
-current = env.reset()
+# current = env.reset()
+# action = env.actionSpace.sample()
+# print(action)
+# state, reward, done = env.step(action)
+# print(state, reward, done)
 
 # print(env.actionSpace.sample())
 # print(current)
@@ -25,7 +29,7 @@ current = env.reset()
 #     state, reward, done = env.step(action)
 #     # print(done, reward, env.uavId)
 #     # print(reward)
-#     # print(env.uavId)
+#     print(env.uavId, reward)
 #     if done:
 #         # print(state)
 #         # print(env.uavId)
@@ -68,4 +72,5 @@ for episode in range(EPISODES):
         if done:
             break
         
-    env.render(episode)
+    if episode%10 == 0 or episode == 0:
+        env.render(episode)
