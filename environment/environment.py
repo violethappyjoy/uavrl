@@ -213,32 +213,37 @@ class Env:
         # self.throughput = []
         return self.getState()
 
+    def normalize_observation(self, observation):
+        # Normalize observation values to a common scale
+        normalized_observation = (observation - observation.mean()) / (observation.std() + 1e-8)
+        return normalized_observation
+    
     def getState(self):
         self.cluster = []
         for id in range(self.noUav):
             if self.current == self.start:
-                velo = np.random.uniform(100,190)
+                velo = np.random.uniform(150,190)
                 txDbm = np.random.uniform(21, 27)
                 # print(txDbm)
                 # coords = (np.random.uniform(22, 250), np.random.uniform(22, 250))
             elif self.uavId == id:
-                # print("NIGGA FOUND")
                 v = self.state[self.uavId][1]
                 if self.reward>0:
-                    velo = np.random.uniform(v, 190)
+                    # print("TEST")
+                    velo = v
                 # elif v < 145 and self.reward>0:
                 #     velo = np.random.uniform(100, v)
                 else:
-                    velo = np.random.uniform(100,190)
+                    velo = np.random.uniform(150,190)
                 txDbm = np.random.uniform(21, 27) + self.reward
             else:
-                velo = np.random.uniform(100,190)
+                velo = np.random.uniform(150,190)
                 txDbm = np.random.uniform(21, 27) - self.reward/2
                 
-            # if txDbm >= 27:
-            #     txDbm = 27
-            if txDbm < 21:
-                txDbm = 21
+            if txDbm >= self.noUav * 27:
+                txDbm = self. noUav * 27
+            if txDbm < 21 / self.noUav:
+                txDbm = 21 / self.noUav
             obj = Uav(
                 v = velo,
                 tx = txDbm,
@@ -262,7 +267,7 @@ class Env:
             
         # print(self.state)
         
-        return np.array(self.state)
+        return self.normalize_observation(np.array(self.state))
     
     def calcReward(self, action):
         stateArr = np.array(self.state)
@@ -273,16 +278,20 @@ class Env:
         snirMax = self.cluster[self.maxUavId].calcSNIR()
         if snirSelected>=snirMax and throughputSelected >= max(self.memoryT):
             reward = self.cluster[self.uavId].dBmtx
-            return reward / 2
+            # print("test3")
+            return reward 
         elif snirSelected>=snirMax and throughputSelected >= self.memoryT[-1]:
             reward = self.cluster[self.uavId].dBmtx
-            return reward / 4
+            # print("test2")
+            return reward / 2
         elif snirSelected<snirMax:
             reward = self.cluster[self.maxUavId].dBmtx
+            # print("test1")
             return -(reward / 2)
         else:
             reward = self.cluster[self.maxUavId].dBmtx
-            return -(reward / 4)
+            # print("test")
+            return 0
         
         
         # throughput = self.cluster[action].calcThroughput()

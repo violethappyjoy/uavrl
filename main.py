@@ -10,6 +10,7 @@ os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 from environment.environment import Uav, Env
 # from environment.dataset import Dataset
 from agent.agent import Agent
+from tqdm import tqdm
 
 # env = Env(noUav=5, windowSize=10, end=100)
 env = Env(5)
@@ -61,7 +62,7 @@ agent = Agent(state_size, action_size)
 # print(state_size)
 
 # Training loop
-for episode in range(EPISODES):
+for episode in tqdm(range(EPISODES), desc='Training Episodes'):
     state = env.reset()
     while True:
         action = agent.act(state)
