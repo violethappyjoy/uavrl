@@ -320,21 +320,23 @@ class Env:
         
         return step, self.reward, self.done
     
-    # def plotThroughput(self):
-    #     uavThroughputs = list(map(list, zip(*self.throughput)))
-    #     timestep = range(len(self.throughput))
-    #     cmap = get_cmap('viridis')
+    def plotThroughputAgg(self, episode):
+        uavThroughputs = list(map(list, zip(*self.throughput)))
+        timestep = range(len(self.throughput))
+        cmap = get_cmap('viridis')
         
-    #     fig, ax = plt.subplots(figsize=(10, 5)) 
+        fig, ax = plt.subplots() 
         
-    #     for uavIdx, uavData in enumerate(uavThroughputs):
-    #         color = cmap(uavIdx / len(uavThroughputs))
-    #         ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
+        for uavIdx, uavData in enumerate(uavThroughputs):
+            color = cmap(uavIdx / len(uavThroughputs))
+            ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
             
-    #     ax.set_xlabel('Timestep')
-    #     ax.set_ylabel('Throughput')
-    #     ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-    #     plt.savefig('throughputGraphs/throughput.png')
+        ax.set_xlabel('Timestep')
+        ax.set_ylabel('Throughput')
+        # ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        os.makedirs('throughputGraphsAgg', exist_ok=True)
+        plt.savefig(f'throughputGraphsAgg/throughput_{episode}.png', dpi=300)
+        plt.close()
     
     def plotThroughput(self, episode):
         uavThroughputs = list(map(list, zip(*self.throughput)))
@@ -349,15 +351,15 @@ class Env:
 
         for uavIdx, uavData in enumerate(uavThroughputs):
             color = cmap(uavIdx / len(uavThroughputs))
-            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = plt.subplots()
 
             ax.plot(timestep, uavData, label=f'UAV {uavIdx + 1}', color=color)
             ax.set_xlabel('Timestep')
             ax.set_ylabel('Throughput')
-            ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+            # ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
             
             # Save the plot to the 'throughputGraphs/' directory with a unique index
-            plt.savefig(f'throughputGraphs/throughput_{plot_index}_episode_{episode}.png')
+            plt.savefig(f'throughputGraphs/throughput_{plot_index}_episode_{episode}.png', dpi=300)
 
             # Increment the counter
             plot_index += 1
@@ -371,9 +373,10 @@ class Env:
         os.makedirs('rewardGraphs', exist_ok=True)
 
     # Save the plot to the 'rewardGraphs/' directory
-        plt.savefig(f'rewardGraphs/rewards_episode_{episode}.png')
+        plt.savefig(f'rewardGraphs/rewards_episode_{episode}.png', dpi=300)
         plt.close()
     
     def render(self, episode):
         self.plotRewards(episode)
         self.plotThroughput(episode)
+        self.plotThroughputAgg(episode)

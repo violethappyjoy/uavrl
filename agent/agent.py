@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import Dense, Flatten, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 import random
@@ -34,7 +34,9 @@ class Agent:
             model = Sequential()
             model.add(Flatten(input_shape=(self.state_size,)))
             model.add(Dense(22, activation='relu'))
+            # model.add(BatchNormalization())
             model.add(Dense(15, activation='relu'))
+            # model.add(BatchNormalization())
             model.add(Dense(self.action_size, activation='linear'))
             model.compile(loss=tf.keras.losses.Huber(), optimizer=Adam(learning_rate=self.learning_rate, clipvalue=1.0))
             return model

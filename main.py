@@ -73,5 +73,5 @@ for episode in tqdm(range(EPISODES), desc='Training Episodes'):
         if done:
             break
         
-    if episode%10 == 0 or episode == 0:
+    if episode%5 == 0 or episode == 0:
         env.render(episode)
