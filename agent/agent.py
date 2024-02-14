@@ -1,4 +1,6 @@
 import tensorflow as tf
+import keras
+from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, BatchNormalization
 from tensorflow.keras.optimizers import Adam
@@ -39,6 +41,9 @@ class Agent:
             # model.add(BatchNormalization())
             model.add(Dense(self.action_size, activation='linear'))
             model.compile(loss=tf.keras.losses.Huber(), optimizer=Adam(learning_rate=self.learning_rate, clipvalue=1.0))
+            model.summary()
+            keras.utils.plot_model(model, "nowtNN.png")
+            keras.utils.plot_model(model, "wtNN.png", show_shapes=True)
             return model
     
     def update_target_model(self):
